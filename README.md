@@ -1,131 +1,91 @@
- 
-# Flask App with MySQL Docker Setup
+# Deployement of Flask-App on AMAZON ELASTIC KUBERNETES SERVICE (EKS)
 
-This is a simple Flask app that interacts with a MySQL database. The app allows users to submit messages, which are then stored in the database and displayed on the frontend.
+This guide provides step-by-step instructions for deploying a Flask-App on AWS EKS The deployment process involves setting up Docker and Docker Compose, building Docker images, and setting up kubernetes manifests files and creating a EKS cluster.
 
-## Prerequisites
+## Setting Up AWS EKS
+1) Launch an AWS EC2 server and connect
 
-Before you begin, make sure you have the following installed:
+2) Install AWS CLI
+Install and configure the AWS Command Line Interface (CLI) on your local.
 
-- Docker
-- Git (optional, for cloning the repository)
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    sudo apt install unzip
+    unzip awscliv2.zip
+    sudo ./aws/install -i /usr/local/aws-cli -b /usr/local/bin --update
+    
+3) Create an IAM Role for EKS management
+Create an IAM role with the necessary permissions for EKS.
 
-## Setup
+   STEPS:
+   1. Create an IAM User:
 
-1. Clone this repository (if you haven't already):
+      - Go to the AWS IAM console.
+      - Create a new IAM user named "eks-admin."
+      - Attach the "AdministratorAccess" policy to this user.
+    
+    2. Create Security Credentials:
+       - After creating the user, generate an Access Key and Secret Access Key for this user.
+    
+4) Launch AWS instance and get access to the instance
 
-   ```bash
-   git clone https://github.com/your-username/your-repo-name.git
-   ```
+5) Configure AWS CLI:
 
-2. Navigate to the project directory:
-
-   ```bash
-   cd your-repo-name
-   ```
-
-3. Create a `.env` file in the project directory to store your MySQL environment variables:
-
-   ```bash
-   touch .env
-   ```
-
-4. Open the `.env` file and add your MySQL configuration:
-
-   ```
-   MYSQL_HOST=mysql
-   MYSQL_USER=your_username
-   MYSQL_PASSWORD=your_password
-   MYSQL_DB=your_database
-   ```
-
-## Usage
-
-1. Start the containers using Docker Compose:
-
-   ```bash
-   docker-compose up --build
-   ```
-
-2. Access the Flask app in your web browser:
-
-   - Frontend: http://localhost
-   - Backend: http://localhost:5000
-
-3. Create the `messages` table in your MySQL database:
-
-   - Use a MySQL client or tool (e.g., phpMyAdmin) to execute the following SQL commands:
+6) Configure the AWS CLI with the Access Key and Secret Access Key from step 3
+    
+   Commands:
    
-     ```sql
-     CREATE TABLE messages (
-         id INT AUTO_INCREMENT PRIMARY KEY,
-         message TEXT
-     );
-     ```
+       aws configure
+   
+7) Kubernetes tools setup:
+    Install kubectl:
+        
+        curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl
+        chmod +x ./kubectl
+        sudo mv ./kubectl /usr/local/bin
+        kubectl version --short –client
+       
+    Install eksctl:
 
-4. Interact with the app:
+        curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/eksctl /usr/local/bin
+        eksctl version
+        
+8) EKS Cluster Setup:
+    
+   Use eksctl to create the EKS cluster:
+      
+   Syntax:
 
-   - Visit http://localhost to see the frontend. You can submit new messages using the form.
-   - Visit http://localhost:5000/insert_sql to insert a message directly into the `messages` table via an SQL query.
+   eksctl create cluster --name <cluster-name> --region <region> --node-type <node-type> --nodes-min <size> --nodes-max <size>
 
-## Cleaning Up
+       eksctl create cluster --name two-tier --region us-east-1 --node-type t2.micro --nodes-min 2 --nodes-max 2
 
-To stop and remove the Docker containers, press `Ctrl+C` in the terminal where the containers are running, or use the following command:
+    
+    to delete: syntax:
+   
+    eksctl delete cluster --name <cluster-name> --region <region>
+    
+       eksctl delete cluster --name two-tier --region us-east-1
+    
+    Update your kubeconfig to connect to the newly created EKS cluster:
 
-```bash
-docker-compose down
-```
+       aws eks update-kubeconfig --region <region> --name <cluster-name>
+    
+10) Verify Nodes:
 
-## To run this two-tier application using  without docker-compose
+        kubectl get nodes
+    
+12) Clone the code
 
-- First create a docker image from Dockerfile
-```bash
-docker build -t flaskapp .
-```
+13) Apply Manifests:
 
-- Now, make sure that you have created a network using following command
-```bash
-docker network create twotier
-```
+        cd Flask-App-on-EKS/eks-manifests
+        kubectl apply -f mysql-secrets.yml -f mysql-configmap.yml -f mysql-deployment.yml -f mysql-svc.yml
+        kubectl apply -f two-tier-app-deployment.yml -f  two-tier-app-svc.yml
 
-- Attach both the containers in the same network, so that they can communicate with each other
+14) Get LoadBalancer IP:
 
-i) MySQL container 
-```bash
-docker run -d \
-    --name mysql \
-    -v mysql-data:/var/lib/mysql \
-    --network=twotier \
-    -e MYSQL_DATABASE=mydb \
-    -e MYSQL_USER=root \
-    -e MYSQL_ROOT_PASSWORD=admin \
-    -p 3306:3306 \
-    mysql:5.7
+        kubectl get svc two-tier-app-service
 
-```
-ii) Backend container
-```bash
-docker run -d \
-    --name flaskapp \
-    --network=twotier \
-    -e MYSQL_HOST=mysql \
-    -e MYSQL_USER=root \
-    -e MYSQL_PASSWORD=admin \
-    -e MYSQL_DB=mydb \
-    -p 5000:5000 \
-    flaskapp:latest
-
-```
-
-## Notes
-
-- Make sure to replace placeholders (e.g., `your_username`, `your_password`, `your_database`) with your actual MySQL configuration.
-
-- This is a basic setup for demonstration purposes. In a production environment, you should follow best practices for security and performance.
-
-- Be cautious when executing SQL queries directly. Validate and sanitize user inputs to prevent vulnerabilities like SQL injection.
-
-- If you encounter issues, check Docker logs and error messages for troubleshooting.
-
-```
-
+### Done
+Go to the IP, your app is Running.
