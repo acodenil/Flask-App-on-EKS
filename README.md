@@ -89,3 +89,6 @@ Create an IAM role with the necessary permissions for EKS.
 
 ### Done
 Go to the IP, your app is Running.
+
+### For CI/CD Pipeline for this app:
+Follow django-notes-app repo: https://github.com/acodenil/django-notes-app.git
