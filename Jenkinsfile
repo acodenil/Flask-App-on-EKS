@@ -15,7 +15,7 @@ pipeline {
         stage("Push to DockerHub"){
             steps{
                 withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
-                    sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
+                    sh "echo ${env.dockerHubPass} | docker login -u ${env.dockerHubUser} --password-stdin"
                     sh "docker tag flaskapp ${env.dockerHubUser}/flaskapp:latest"
                     sh "docker push ${env.dockerHubUser}/flaskapp:latest" 
                 }
