@@ -3,6 +3,8 @@ pipeline {
     
     environment {
         MANIFESTS_FOLDER = '/Flask-App-on-EKS/eks-manifests'
+        AWS_ACCESS_KEY_ID = credentials('AKIA2BSJGGHJZY4QWQWI')
+        AWS_SECRET_ACCESS_KEY = credentials('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')
     }
     stages{
         stage("Code"){
