@@ -1,6 +1,9 @@
 pipeline {
     agent any
     
+    environment {
+        MANIFESTS_FOLDER = '/Flask-App-on-EKS/eks-manifests'
+    }
     stages{
         stage("Code"){
             steps{
@@ -21,10 +24,20 @@ pipeline {
                 }
             }
         }
-        stage("Deploy"){
-            steps{
-                sh "docker-compose down && docker-compose up -d"
+        stage('Deploying Manifests') {
+            steps {
+                sh 'kubectl apply -f $MANIFESTS_FOLDER/mysql-secrets.yml -f $MANIFESTS_FOLDER/mysql-configmap.yml -f $MANIFESTS_FOLDER/mysql-deployment.yml -f $MANIFESTS_FOLDER/mysql-svc.yml'
+                sh 'kubectl apply -f $MANIFESTS_FOLDER/two-tier-app-deployment.yml -f $MANIFESTS_FOLDER/two-tier-app-svc.yml'
             }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Deployment successful'
+        }
+        failure {
+            echo 'Deployment failed'
         }
     }
 }
