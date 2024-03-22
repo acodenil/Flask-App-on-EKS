@@ -56,14 +56,14 @@ Create an IAM role with the necessary permissions for EKS.
       
    Syntax:
 
-   eksctl create cluster --name <cluster-name> --region <region> --node-type <node-type> --nodes-min <size> --nodes-max <size>
+   eksctl create cluster --name \<cluster-name\> --region \<region\> --node-type \<node-type\> --nodes-min \<size\> --nodes-max \<size\>
 
        eksctl create cluster --name two-tier --region us-east-1 --node-type t2.micro --nodes-min 2 --nodes-max 2
 
     
     to delete: syntax:
    
-    eksctl delete cluster --name <cluster-name> --region <region>
+    eksctl delete cluster --name \<cluster-name\> --region \<region\>
     
        eksctl delete cluster --name two-tier --region us-east-1
     
